@@ -5,11 +5,10 @@ class MyClient(discord.Client):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
         for chan in self.get_all_channels():
-            if chan is discord.CategoryChannel
-            await chan.send(f'Inicializando SGR...')
-            await chan.send(f'Inicializando SGR...')
-            await chan.send(f'Explotando el servidor de fuentes...')
-            await chan.send(f'Tirando los ambientes de argentina...')
+            if chan.name == 'general':
+                await chan.send(f'Inicializando SGR...')
+                await chan.send(f'Explotando el servidor de fuentes...')
+                await chan.send(f'Tirando los ambientes de argentina...')
 
     async def on_message(self, message):
         if message.author == client.user:
