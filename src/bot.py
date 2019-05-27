@@ -13,6 +13,13 @@ class MyClient(discord.Client):
     async def on_message(self, message):
         if message.author == client.user:
             return
+        mes = message.content
+        if mes[0] == '&':
+            print(f'It\'s a command!')
+            if mes[1:5] == 'play':
+                await message.channel.send(f'Reproduciendo video: {mes[6:]}')
+            if mes[1:] == 'reset' and message.author == 'Metroid#4781':
+                await message.channel.send('Reseteando bot..')
         print(f'Message from {message.author}: {message.content}')
 
 
