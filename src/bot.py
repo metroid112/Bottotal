@@ -14,7 +14,7 @@ class MyClient(discord.Client):
         if message.author == client.user:
             return
         mes = message.content
-        if mes[0] == '&':
+        if mes[0] == '&' and message.channel == 'bot_pato':
             print(f'It\'s a command!')
             if mes[1:5] == 'play':
                 await message.channel.send(f'Reproduciendo video: {mes[6:]}')
