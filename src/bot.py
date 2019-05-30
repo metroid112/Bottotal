@@ -9,6 +9,11 @@ from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 
+def fetch_sql(sentence):
+    cursor_temp = db_connection.cursor()
+    query_user = cursor_temp.execute(sentence).fetchall()
+    cursor_temp.close()
+    return query_user
 
 class MyClient(discord.Client):
     async def on_ready(self):
@@ -26,9 +31,8 @@ class MyClient(discord.Client):
         if mes[0] == '&' and message.channel == 'bot_pato':
             print(f'It\'s a command!')
             if mes[1:7] == 'create':
-                cursor_temp = db_connection.cursor()
-                query_user = cursor_temp.execute(f'SELECT * FROM USERS WHERE USER_NAME = {}').fetchall()
-                cursor_temp.close()
+                query_user = fetch_sql(f'SELECT * FROM USERS WHERE USER_NAME = {}')
+                print(query_user)
             if mes[1:5] == 'play':
                 request = youtube.search().list(
                     part="snippet",
@@ -47,7 +51,6 @@ class MyClient(discord.Client):
                 self.clear()
                 await self.start('NTgyNTc1OTc2MTkwNTc0NTk3.XOv1Cw.Tz2X0OzrNjK4NXB4sh6NjSD99pU', bot=True)
         print(f'Message from {message.author}: {message.content}')
-
 
 db_connection = sqlite3.connect('bot.db')
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
