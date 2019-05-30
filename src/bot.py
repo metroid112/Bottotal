@@ -1,9 +1,9 @@
 import discord
 import os
-import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 import pprint
+import sqlite3
 
 from oauth2client import client
 from oauth2client import tools
@@ -26,7 +26,9 @@ class MyClient(discord.Client):
         if mes[0] == '&' and message.channel == 'bot_pato':
             print(f'It\'s a command!')
             if mes[1:7] == 'create':
-                print(str(message.author) + 'GAY')
+                cursor_temp = db_connection.cursor()
+                query_user = cursor_temp.execute(f'SELECT * FROM USERS WHERE USER_NAME = {}').fetchall()
+                cursor_temp.close()
             if mes[1:5] == 'play':
                 request = youtube.search().list(
                     part="snippet",
@@ -47,6 +49,7 @@ class MyClient(discord.Client):
         print(f'Message from {message.author}: {message.content}')
 
 
+db_connection = sqlite3.connect('bot.db')
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
 api_service_name = "youtube"
