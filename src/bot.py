@@ -5,6 +5,10 @@ import googleapiclient.discovery
 import googleapiclient.errors
 import pprint
 
+from oauth2client import client
+from oauth2client import tools
+from oauth2client.file import Storage
+
 
 class MyClient(discord.Client):
     async def on_ready(self):
@@ -19,8 +23,10 @@ class MyClient(discord.Client):
         if message.author == client.user:
             return
         mes = message.content
-        if mes[0] == '&':
+        if mes[0] == '&' and message.channel == 'bot_pato':
             print(f'It\'s a command!')
+            if mes[1:7] == 'create':
+                print(str(message.author) + 'GAY')
             if mes[1:5] == 'play':
                 request = youtube.search().list(
                     part="snippet",
@@ -41,15 +47,17 @@ class MyClient(discord.Client):
         print(f'Message from {message.author}: {message.content}')
 
 
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
 api_service_name = "youtube"
 api_version = "v3"
 client_secrets_file = "client_secret.json"
-flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
-    client_secrets_file, scopes)
-credentials = flow.run_console()
+credential_path = os.path.join('credential_sample.json')
+store = Storage(credential_path)
+credentials = store.get()
+flow = client.flow_from_clientsecrets(client_secrets_file, scopes)
+credentials = tools.run_flow(flow, store)
 youtube = googleapiclient.discovery.build(
     api_service_name, api_version, credentials=credentials)
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 client = MyClient()
 client.run('NTgyNTc1OTc2MTkwNTc0NTk3.XOv1Cw.Tz2X0OzrNjK4NXB4sh6NjSD99pU')
