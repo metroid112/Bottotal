@@ -119,3 +119,4 @@ dmypy.json
 .idea/vcs.xml
 .idea/workspace.xml
 src/client_secret.json
+src/credential_sample.json
