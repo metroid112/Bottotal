@@ -12,9 +12,39 @@ from oauth2client.file import Storage
 
 def sql(sentence):
     cursor_temp = db_connection.cursor()
-    query_user = cursor_temp.execute(sentence).fetchall()
+    print(sentence)
+    query = cursor_temp.execute(sentence).fetchall()
     cursor_temp.close()
-    return query_user
+    return query
+
+
+def insert_sql(table, args):
+    cursor_temp = db_connection.cursor()
+    print(args)
+    sentence = f'INSERT INTO {table} VALUES (?'
+    for i in range(len(args) - 1):
+        sentence += ',?'
+    sentence += ')'
+    print(sentence)
+    cursor_temp.execute(sentence, args)
+
+
+async def create_command(message):
+    query_user = sql(f'SELECT * FROM USERS WHERE USER_NAME = "{message.author.name}"')
+    print(query_user)
+    if len(query_user) == 0:
+        await create_user(message)
+    # await self.create_character()
+
+
+async def create_user(message):
+    query_id = sql(f'SELECT USER_ID FROM USERS')
+    if len(query_id) == 0:
+        user_id = 1
+    else:
+        user_id = query_id[len(query_id)][0]
+    insert_sql('USERS', [user_id, message.author.name])
+    await message.channel.send(f'Usuario nuevo ({user_id}, {message.author.name}), creando...')
 
 
 class MyClient(discord.Client):
@@ -36,7 +66,7 @@ class MyClient(discord.Client):
             if message.content[0] == '&':
                 print(f'It\'s a command!')
                 if message.content[1:7] == 'create':
-                    await self.create_command(message)
+                    await create_command(message)
                 if message.content[1:5] == 'play':
                     request = youtube.search().list(
                         part="snippet",
@@ -55,21 +85,6 @@ class MyClient(discord.Client):
                     self.clear()
                     await self.start('NTgyNTc1OTc2MTkwNTc0NTk3.XOv1Cw.Tz2X0OzrNjK4NXB4sh6NjSD99pU', bot=True)
             print(f'Message from {message.author.name}: {message.content}')
-
-    async def create_command(self, message):
-        query_user = sql(f'SELECT * FROM USERS WHERE USER_NAME = "{message.author.name}"')
-        print(query_user)
-        if len(query_user) == 0:
-            query_id = sql(f'SELECT USER_ID FROM USERS')
-            if len(query_id) == 0:
-                user_id = 1
-            else:
-                user_id = query_id[len(query_id)][0]
-            sql(f'INSERT INTO USERS VALUES({user_id}, "{message.author.name}")')
-            await message.channel.send(f'Usuario nuevo, creando...')
-        await create_character()
-
-
 
 
 db_connection = sqlite3.connect('bot.db')
