@@ -27,6 +27,8 @@ def insert_sql(table, args):
     sentence += ')'
     print(sentence)
     cursor_temp.execute(sentence, args)
+    db_connection.commit()
+    cursor_temp.close()
 
 
 async def create_command(message):
