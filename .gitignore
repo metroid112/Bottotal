@@ -122,3 +122,4 @@ src/client_secret.json
 src/credential_sample.json
 src/bot.db
 src/bot.db-journal
+.idea/inspectionProfiles/Project_Default.xml
