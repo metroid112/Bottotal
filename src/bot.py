@@ -4,6 +4,7 @@ import googleapiclient.discovery
 import googleapiclient.errors
 import pprint
 import sqlite3
+import json
 
 from oauth2client import client
 from oauth2client import tools
@@ -21,7 +22,10 @@ def is_valid_character_name(name):
 def sql(sentence):
     cursor_temp = db_connection.cursor()
     print(sentence)
-    query = cursor_temp.execute(sentence).fetchall()
+    try:
+        query = cursor_temp.execute(sentence).fetchall()
+    except (sqlite3.Warning, sqlite3.Error) as error:
+        return error
     db_connection.commit()
     cursor_temp.close()
     return query
@@ -44,8 +48,8 @@ async def create_user(message):
     if not query_id:
         user_id = 1
     else:
-        user_id = query_id[-1][0]
-    sql(f'INSERT INTO USERS (USER_ID, USER_NAME) VALUES {user_id}, {message.author.name}')
+        user_id = query_id[-1][0] + 1
+    sql(f'INSERT INTO USERS (USER_ID, USER_NAME) VALUES ({user_id}, {message.author.name})')
     await message.channel.send(f'Usuario nuevo ({user_id}, {message.author.name})')
 
 
@@ -75,10 +79,12 @@ async def play_video(message):
         maxResults=1,
         q=message.content[6:]
     )
-    response = request.execute()
-    pprint.pprint(response)
-    await message.channel.send(f'Respuesta api youtube: {response}')
-    await message.channel.send(f'Reproduciendo video: {message.content[6:]}')
+    json_response = request.execute()
+    pprint.pprint(json_response)
+    video_title = json_response['items'][0]['snippet']['title'].replace('&amp;', '&')
+    video_id = json_response['items'][0]['id']['videoId']
+    video_link = 'https://youtu.be/' + video_id
+    await message.channel.send(f'Reproduciendo video: {video_link} - {video_title}')
 
 
 class MyClient(discord.Client):
@@ -91,23 +97,35 @@ class MyClient(discord.Client):
                 await chan.send(f'Tirando los ambientes de argentina...')
 
     async def on_message(self, message):
-        if message.author == client.user:
-            return
-        if isinstance(message.content, str):
-            if message.content[0] == '&':
-                print(f'It\'s a command!')
-                if message.content[1:7] == 'create':
-                    await create_command(message)
-                if message.content[1:5] == 'play':
-                    await play_video(message)
-                if message.content[1:5] == 'exit' and message.author.name == 'Metroid':
-                    await message.channel.send(f'Cerrando bot...')
-                    await self.close()
-                if message.content[1:6] == 'reset' and message.author.name == 'Metroid':
-                    await message.channel.send(f'Reseteando bot...')
-                    self.clear()
-                    await self.start('NTgyNTc1OTc2MTkwNTc0NTk3.XOv1Cw.Tz2X0OzrNjK4NXB4sh6NjSD99pU', bot=True)
+        try:
+            if message.author == client.user:
+                return
+            if isinstance(message.content, str):
+                if message.content[0] == '&':
+                    print(f'It\'s a command!')
+                    if message.content[1:7] == 'create':
+                        await create_command(message)
+                    if message.content[1:5] == 'play':
+                        await play_video(message)
+                    if message.content[1:5] == 'exit' and message.author.name == 'Metroid':
+                        await message.channel.send(f'Cerrando bot...')
+                        await self.close()
+                    if message.content[1:6] == 'reset' and message.author.name == 'Metroid':
+                        await message.channel.send(f'Reseteando bot...')
+                        self.clear()
+                        await self.start('NTgyNTc1OTc2MTkwNTc0NTk3.XOv1Cw.Tz2X0OzrNjK4NXB4sh6NjSD99pU', bot=True)
+                    if message.content[1:4] == 'sql' and message.author.name == 'Metroid':
+                        await message.channel.send(f'Ejecutando SQL...')
+                        await message.channel.send(sql(f'{message.content[5:]}'))
+                    if message.content[1:5] == 'spam' and message.author.name == 'Metroid':
+                        # for i in range(50):
+                        while True:
+                            await message.channel.send(message.content[6:])
+                if 'Maestruleitor' in message.author.name:
+                    await message.channel.send(f'Bot gil, mira las boludeces que decis "{message.content}"')
             print(f'Message from {message.author.name}: {message.content}')
+        except Exception as error:
+            await message.channel.send(error)
 
 
 db_connection = sqlite3.connect('bot.db')
