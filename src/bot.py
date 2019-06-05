@@ -24,7 +24,7 @@ def sql(sentence):
     print(sentence)
     try:
         query = cursor_temp.execute(sentence).fetchall()
-    except (sqlite3.Warning, sqlite3.Error) as error:
+    except Exception as error:
         return error
     db_connection.commit()
     cursor_temp.close()
@@ -49,7 +49,7 @@ async def create_user(message):
         user_id = 1
     else:
         user_id = query_id[-1][0] + 1
-    sql(f'INSERT INTO USERS (USER_ID, USER_NAME) VALUES ({user_id}, {message.author.name})')
+    sql(f'INSERT INTO USERS (USER_ID, USER_NAME) VALUES ({user_id}, "{message.author.name}")')
     await message.channel.send(f'Usuario nuevo ({user_id}, {message.author.name})')
 
 
