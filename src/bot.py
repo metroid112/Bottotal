@@ -118,7 +118,6 @@ class MyClient(discord.Client):
                         await message.channel.send(f'Ejecutando SQL...')
                         await message.channel.send(sql(f'{message.content[5:]}'))
                     if message.content[1:5] == 'spam' and message.author.name == 'Metroid':
-                        # for i in range(50):
                         while True:
                             await message.channel.send(message.content[6:])
                 if 'Maestruleitor' in message.author.name:
