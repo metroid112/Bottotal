@@ -144,6 +144,15 @@ class MyClient(discord.Client):
                         if command[7:11] == 'spam':
                             while True:
                                 await message.channel.send(command[12:])
+                        if command[7:11] == 'code':
+                            message_code = ''
+                            for line in open('bot.py', 'r').read():
+                                message_code += line
+                            pprint.pprint(message_code)
+                            await message.channel.send('```' + message_code[:1994] + '```')
+                            await message.channel.send('```' + message_code[1997:3991] + '```')
+                            await message.channel.send('```' + message_code[3994:7988] + '```')
+                            await message.channel.send('```' + message_code[7991:11885] + '```')
                     if command[1:5] == 'help':
                         if command[6:13] == 'classes':
                             await message.channel.send(sql(f'SELECT * FROM CLASSES'))
@@ -152,9 +161,9 @@ class MyClient(discord.Client):
                     if command[1:5] == 'play':
                         await play_video(message)
                 print(f'{message.author.name}: {message.content}')
-            else:
-                for attachment in message.attachments:
-                    await message.channel.send(attachment.url)
+            # else:
+            #     for attachment in message.attachments:
+            #         await message.channel.send(attachment.url)
         except Exception as error:
             await message.channel.send(error)
 
