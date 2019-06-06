@@ -4,19 +4,19 @@ import googleapiclient.discovery
 import googleapiclient.errors
 import pprint
 import sqlite3
-import json
 
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 
 
-def is_valid_character_name(name):
+def is_valid_name(name):
     valid_characters = set('qwertyuiopasdfghjklzxcvbnm')
-    if all((character.lower() in valid_characters) for character in name):
-        return True
-    else:
-        return False
+    return all((character.lower() in valid_characters) for character in name)
+
+
+def is_valid_class(class_id):
+    return sql(f'SELECT * FROM CLASSES WHERE CLASS_ID = {class_id}')
 
 
 def sql(sentence):
@@ -31,9 +31,23 @@ def sql(sentence):
     return query
 
 
+async def create_class(message):
+    class_name = message.content[16:].strip()
+    if is_valid_name(class_name):
+        query_class = sql(f'SELECT * FROM CLASSES WHERE CLASS_NAME = "{class_name}"')
+        if not query_class:
+            query_class = sql(f'SELECT CLASS_ID FROM CLASSES')
+            if not query_class:
+                class_id = 1
+            else:
+                class_id = query_class[-1][0] + 1
+            sql(f'INSERT INTO CLASSES (CLASS_ID, CLASS_NAME) VALUES ({class_id}, "{class_name}")')
+        else:
+            await message.channel.send(f'Clase {class_name} ya existe')
+
+
 async def create_command(message):
     query_user = sql(f'SELECT * FROM USERS WHERE USER_NAME = "{message.author.name}"')
-    print(query_user)
     if not query_user:
         await message.channel.send(f'Usuario {message.author.name} no existe, creando...')
         await create_user(message)
@@ -44,7 +58,6 @@ async def create_command(message):
 
 async def create_user(message):
     query_id = sql(f'SELECT USER_ID FROM USERS')
-    print(query_id)
     if not query_id:
         user_id = 1
     else:
@@ -54,30 +67,39 @@ async def create_user(message):
 
 
 async def create_character(message, user_id):
-    if is_valid_character_name(message.content[8:]):
-        character_name = message.content[8:].strip()
-        query_character = sql(f'SELECT * FROM CHARACTERS WHERE USER_ID = {user_id} AND CHARACTER_NAME = "{character_name}"')
-        print(query_character)
-        if not query_character:
-            await message.channel.send(f'Personaje {character_name} no existe, creando...')
-            query_character = sql(f'SELECT CHARACTER_ID FROM CHARACTERS')
-            print(query_character)
-            if not query_character:
-                character_id = 1
+    name_separator = message.content[8:].index(' ') + 8
+    class_separator = name_separator + 1
+    character_name = message.content[8:name_separator].strip()
+    try:
+        class_id = int(message.content[class_separator:])
+        if is_valid_name(character_name):
+            if class_id != 0 and is_valid_class(class_id):
+                query_character = sql(f'SELECT * FROM CHARACTERS WHERE USER_ID = {user_id} AND CHARACTER_NAME = "{character_name}"')
+                if not query_character:
+                    await message.channel.send(f'Personaje {character_name} no existe, creando...')
+                    query_character = sql(f'SELECT CHARACTER_ID FROM CHARACTERS')
+                    if not query_character:
+                        character_id = 1
+                    else:
+                        character_id = sql(f'SELECT CHARACTER_ID FROM CHARACTERS')[-1][0] + 1
+                    sql(f'INSERT INTO CHARACTERS (USER_ID, CHARACTER_ID, CLASS_ID, CHARACTER_NAME) VALUES ({user_id}, {character_id}, {class_id},"{character_name}")')
+                else:
+                    await message.channel.send(
+                        f'Usuario {message.author.name} ya tiene un personaje llamado {character_name}')
             else:
-                character_id = query_character[-1][0] + 1
-            sql(f'INSERT INTO CHARACTERS (USER_ID, CHARACTER_ID, CHARACTER_NAME) VALUES ({user_id}, {character_id}, "{character_name}")')
+                await message.channel.send(f'Elija un número de clase válido')
         else:
-            await message.channel.send(f'Usuario {message.author.name} ya tiene un personaje llamado {character_name}')
-    else:
-        await message.channel.send(f'El nombre {message.content[8:]} no es válido')
+            await message.channel.send(f'El nombre {character_name} no es válido')
+    except ValueError as error:
+        await message.channel.send(f'La clase no es válida')
+        print(error)
 
 
 async def play_video(message):
     request = youtube.search().list(
         part="snippet",
         maxResults=1,
-        q=message.content[6:]
+        q=message.content[7:]
     )
     json_response = request.execute()
     pprint.pprint(json_response)
@@ -102,27 +124,34 @@ class MyClient(discord.Client):
                 return
             if isinstance(message.content, str):
                 if message.content[0] == '&':
-                    print(f'It\'s a command!')
-                    if message.content[1:7] == 'create':
+                    command = message.content
+                    for i, j in enumerate(command):
+                        print(i, j)
+                    if command[1:6] == 'admin' and message.author.name == 'Metroid':
+                        if command[7:15] == 'newclass':
+                            await message.channel.send(f'Creando clase...')
+                            await create_class(message)
+                        if command[7:11] == 'exit':
+                            await message.channel.send(f'Cerrando bot...')
+                            await self.close()
+                        if command[7:12] == 'reset':
+                            await message.channel.send(f'Reseteando bot...')
+                            self.clear()
+                            await self.start('NTgyNTc1OTc2MTkwNTc0NTk3.XOv1Cw.Tz2X0OzrNjK4NXB4sh6NjSD99pU', bot=True)
+                        if command[7:10] == 'sql':
+                            await message.channel.send(f'Ejecutando SQL...')
+                            await message.channel.send(sql(f'{command[11:]}'))
+                        if command[7:11] == 'spam':
+                            while True:
+                                await message.channel.send(command[12:])
+                    if command[1:5] == 'help':
+                        if command[6:13] == 'classes':
+                            await message.channel.send(sql(f'SELECT * FROM CLASSES'))
+                    if command[1:7] == 'create':
                         await create_command(message)
-                    if message.content[1:5] == 'play':
+                    if command[1:5] == 'play':
                         await play_video(message)
-                    if message.content[1:5] == 'exit' and message.author.name == 'Metroid':
-                        await message.channel.send(f'Cerrando bot...')
-                        await self.close()
-                    if message.content[1:6] == 'reset' and message.author.name == 'Metroid':
-                        await message.channel.send(f'Reseteando bot...')
-                        self.clear()
-                        await self.start('NTgyNTc1OTc2MTkwNTc0NTk3.XOv1Cw.Tz2X0OzrNjK4NXB4sh6NjSD99pU', bot=True)
-                    if message.content[1:4] == 'sql' and message.author.name == 'Metroid':
-                        await message.channel.send(f'Ejecutando SQL...')
-                        await message.channel.send(sql(f'{message.content[5:]}'))
-                    if message.content[1:5] == 'spam' and message.author.name == 'Metroid':
-                        while True:
-                            await message.channel.send(message.content[6:])
-                if 'Maestruleitor' in message.author.name:
-                    await message.channel.send(f'Bot gil, mira las boludeces que decis "{message.content}"')
-            print(f'Message from {message.author.name}: {message.content}')
+            print(f'{message.author.name}: {message.content}')
         except Exception as error:
             await message.channel.send(error)
 
