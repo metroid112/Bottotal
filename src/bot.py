@@ -65,7 +65,7 @@ async def create_character(message, user_id):
             if not query_character:
                 character_id = 1
             else:
-                character_id = query_character[-1][0]
+                character_id = query_character[-1][0] + 1
             sql(f'INSERT INTO CHARACTERS (USER_ID, CHARACTER_ID, CHARACTER_NAME) VALUES ({user_id}, {character_id}, "{character_name}")')
         else:
             await message.channel.send(f'Usuario {message.author.name} ya tiene un personaje llamado {character_name}')
@@ -98,7 +98,7 @@ class MyClient(discord.Client):
 
     async def on_message(self, message):
         try:
-            if message.author == client.user:
+            if message.author == client.user or message.author.bot:
                 return
             if isinstance(message.content, str):
                 if message.content[0] == '&':
