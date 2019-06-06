@@ -122,7 +122,7 @@ class MyClient(discord.Client):
         try:
             if message.author == client.user or message.author.bot:
                 return
-            if isinstance(message.content, str):
+            if not message.attachments:
                 if message.content[0] == '&':
                     command = message.content
                     for i, j in enumerate(command):
@@ -151,7 +151,10 @@ class MyClient(discord.Client):
                         await create_command(message)
                     if command[1:5] == 'play':
                         await play_video(message)
-            print(f'{message.author.name}: {message.content}')
+                print(f'{message.author.name}: {message.content}')
+            else:
+                for attachment in message.attachments:
+                    await message.channel.send(attachment.url)
         except Exception as error:
             await message.channel.send(error)
 
