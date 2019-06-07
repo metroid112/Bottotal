@@ -1,3 +1,14 @@
+# TODO: XP
+# TODO: Stats
+# TODO: DMG
+# TODO: Monsters
+# TODO: Quests
+# TODO: LVLs
+# TODO: Items
+# TODO: Modifiers
+# TODO: Inventory
+# TODO: Money
+
 import discord
 import os
 import googleapiclient.discovery
@@ -16,7 +27,7 @@ def is_valid_name(name):
 
 
 def is_valid_class(class_id):
-    return sql(f'SELECT * FROM CLASSES WHERE CLASS_ID = {class_id}')
+    return sql(f'SELECT CLASS_ID FROM CLASSES WHERE CLASS_ID = {class_id}')
 
 
 def sql(sentence):
@@ -74,7 +85,8 @@ async def create_character(message, user_id):
         class_id = int(message.content[class_separator:])
         if is_valid_name(character_name):
             if class_id != 0 and is_valid_class(class_id):
-                query_character = sql(f'SELECT * FROM CHARACTERS WHERE USER_ID = {user_id} AND CHARACTER_NAME = "{character_name}"')
+                query_character = sql(
+                    f'SELECT * FROM CHARACTERS WHERE USER_ID = {user_id} AND CHARACTER_NAME = "{character_name}"')
                 if not query_character:
                     await message.channel.send(f'Personaje {character_name} no existe, creando...')
                     query_character = sql(f'SELECT CHARACTER_ID FROM CHARACTERS')
@@ -82,7 +94,8 @@ async def create_character(message, user_id):
                         character_id = 1
                     else:
                         character_id = sql(f'SELECT CHARACTER_ID FROM CHARACTERS')[-1][0] + 1
-                    sql(f'INSERT INTO CHARACTERS (USER_ID, CHARACTER_ID, CLASS_ID, CHARACTER_NAME) VALUES ({user_id}, {character_id}, {class_id},"{character_name}")')
+                    sql(
+                        f'INSERT INTO CHARACTERS (USER_ID, CHARACTER_ID, CLASS_ID, CHARACTER_NAME) VALUES ({user_id}, {character_id}, {class_id},"{character_name}")')
                 else:
                     await message.channel.send(
                         f'Usuario {message.author.name} ya tiene un personaje llamado {character_name}')
@@ -144,6 +157,7 @@ class MyClient(discord.Client):
                         if command[7:11] == 'spam':
                             while True:
                                 await message.channel.send(command[12:])
+                        # TODO: Fix code command
                         if command[7:11] == 'code':
                             message_code = ''
                             for line in open('bot.py', 'r').read():
@@ -161,9 +175,6 @@ class MyClient(discord.Client):
                     if command[1:5] == 'play':
                         await play_video(message)
                 print(f'{message.author.name}: {message.content}')
-            # else:
-            #     for attachment in message.attachments:
-            #         await message.channel.send(attachment.url)
         except Exception as error:
             await message.channel.send(error)
 
