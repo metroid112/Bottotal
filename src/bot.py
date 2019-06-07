@@ -8,7 +8,10 @@
 # TODO: Modifiers
 # TODO: Inventory
 # TODO: Money
-
+# Modifiers:
+# S: Suffix
+# P: Prefix
+# N: Doesn't change name
 import discord
 import os
 import googleapiclient.discovery
