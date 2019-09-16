@@ -24,6 +24,12 @@ from oauth2client import tools
 from oauth2client.file import Storage
 
 
+def modifiers_to_dict(str_modifiers):
+    # TODO: Interpret modifiers in Items and Classes
+    modifiers = str_modifiers.split('|')
+    return modifiers
+
+
 def is_valid_name(name):
     valid_characters = set('qwertyuiopasdfghjklzxcvbnm')
     return all((character.lower() in valid_characters) for character in name)
